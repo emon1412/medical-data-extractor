@@ -87,9 +87,7 @@ export function PatientsPanel({ refreshKey, onToast }: Props) {
           Patients
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Unique patients derived from orders. Same first + last + DOB collapses
-          to one record so you can see a patient&apos;s entire order history at
-          a glance.
+          Unique patients derived from orders.
         </Typography>
       </Box>
 
@@ -104,11 +102,11 @@ export function PatientsPanel({ refreshKey, onToast }: Props) {
           >
             <Stack direction="row" spacing={1}>
               <TextField
-                placeholder="Search by name…"
+                placeholder="Search by first name, last name, dob"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && load()}
-                sx={{ width: 260 }}
+                sx={{ width: 520 }}
               />
               <Button variant="outlined" onClick={load} disabled={loading}>
                 {loading ? "Loading…" : "Refresh"}
@@ -139,11 +137,34 @@ export function PatientsPanel({ refreshKey, onToast }: Props) {
               </Typography>
             </Box>
           ) : (
-            <TableContainer>
-              <Table>
+            <TableContainer
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 1.5,
+                overflow: "hidden",
+              }}
+            >
+              <Table
+                sx={{
+                  "& th, & td": { py: 1.5, px: 2 },
+                  "& tbody tr:last-of-type td": { borderBottom: "none" },
+                }}
+              >
                 <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ width: 40 }} />
+                  <TableRow
+                    sx={{
+                      bgcolor: "grey.50",
+                      "& th": {
+                        fontWeight: 600,
+                        fontSize: 11,
+                        letterSpacing: 0.6,
+                        textTransform: "uppercase",
+                        color: "text.secondary",
+                      },
+                    }}
+                  >
+                    <TableCell sx={{ width: 48 }} />
                     <TableCell>Patient</TableCell>
                     <TableCell>DOB</TableCell>
                     <TableCell align="right">Orders</TableCell>
@@ -204,11 +225,12 @@ export function PatientsPanel({ refreshKey, onToast }: Props) {
                           }}
                         >
                           <Collapse in={openId === p.id} unmountOnExit>
-                            <Box sx={{ px: 2, py: 2, bgcolor: "grey.50" }}>
+                            <Box sx={{ p: 0, bgcolor: "grey.50" }}>
                               {openLoading ? (
                                 <Typography
                                   variant="body2"
                                   color="text.secondary"
+                                  sx={{ p: 2 }}
                                 >
                                   Loading orders…
                                 </Typography>
@@ -216,16 +238,26 @@ export function PatientsPanel({ refreshKey, onToast }: Props) {
                                 <Typography
                                   variant="body2"
                                   color="text.secondary"
+                                  sx={{ p: 2 }}
                                 >
                                   No orders for this patient.
                                 </Typography>
                               ) : (
-                                <Stack spacing={2}>
+                                <Stack spacing={0}>
                                   {openOrders.map((o) => (
                                     <Paper
                                       key={o.id}
-                                      variant="outlined"
-                                      sx={{ p: 2 }}
+                                      square
+                                      elevation={0}
+                                      sx={{
+                                        p: 2.5,
+                                        bgcolor: "transparent",
+                                        borderTop: "1px solid",
+                                        borderColor: "divider",
+                                        "&:first-of-type": {
+                                          borderTop: "none",
+                                        },
+                                      }}
                                     >
                                       <Stack
                                         direction="row"

@@ -21,9 +21,11 @@ import {
 } from "@mui/material"
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight"
-import EditIcon from "@mui/icons-material/Edit"
-import DeleteIcon from "@mui/icons-material/Delete"
-import DescriptionIcon from "@mui/icons-material/Description"
+import EditIcon from "@mui/icons-material/EditOutlined"
+import DeleteIcon from "@mui/icons-material/DeleteOutlined"
+import DescriptionIcon from "@mui/icons-material/DescriptionOutlined"
+import ContentCopyIcon from "@mui/icons-material/ContentCopyOutlined"
+import CheckIcon from "@mui/icons-material/Check"
 import { api } from "../lib/api"
 import { DocumentDetailsView } from "./DocumentDetailsView"
 import type { Order, OrderCreate, OrderStatus, OrderedItem } from "../types/api"
@@ -83,6 +85,55 @@ function describeItem(item: OrderedItem): string {
   const code = (item.code || "").trim()
   if (desc && code) return `${code} · ${desc}`
   return desc || code || "(unnamed item)"
+}
+
+function RawJsonCopyButton({
+  data,
+  onToast,
+}: {
+  data: unknown
+  onToast?: (msg: string, kind?: "success" | "error") => void
+}) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    const text = JSON.stringify(data, null, 2)
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        const ta = document.createElement("textarea")
+        ta.value = text
+        ta.style.position = "fixed"
+        ta.style.opacity = "0"
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand("copy")
+        document.body.removeChild(ta)
+      }
+      setCopied(true)
+      onToast?.("Copied JSON to clipboard", "success")
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch (e) {
+      onToast?.((e as Error).message || "Failed to copy", "error")
+    }
+  }
+  return (
+    <Button
+      size="small"
+      variant="outlined"
+      startIcon={
+        copied ? (
+          <CheckIcon fontSize="small" />
+        ) : (
+          <ContentCopyIcon fontSize="small" />
+        )
+      }
+      onClick={copy}
+      color={copied ? "success" : "primary"}
+    >
+      {copied ? "Copied" : "Copy"}
+    </Button>
+  )
 }
 
 function ItemsCell({ order }: { order: Order }) {
@@ -237,7 +288,7 @@ export function OrdersPanel({ refreshKey, onToast }: Props) {
             Orders
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Patient orders extracted from documents or created manually.
+            Orders extracted from documents or created manually.
           </Typography>
         </Box>
         <Button variant="contained" onClick={() => setShowCreate((v) => !v)}>
@@ -384,11 +435,35 @@ export function OrdersPanel({ refreshKey, onToast }: Props) {
               </Typography>
             </Box>
           ) : (
-            <TableContainer>
-              <Table size="small">
+            <TableContainer
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 1.5,
+                overflow: "hidden",
+              }}
+            >
+              <Table
+                size="small"
+                sx={{
+                  "& th, & td": { py: 1.5, px: 2 },
+                  "& tbody tr:last-of-type td": { borderBottom: "none" },
+                }}
+              >
                 <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ width: 40 }} />
+                  <TableRow
+                    sx={{
+                      bgcolor: "grey.50",
+                      "& th": {
+                        fontWeight: 600,
+                        fontSize: 11,
+                        letterSpacing: 0.6,
+                        textTransform: "uppercase",
+                        color: "text.secondary",
+                      },
+                    }}
+                  >
+                    <TableCell sx={{ width: 48 }} />
                     <TableCell>Patient</TableCell>
                     <TableCell>DOB</TableCell>
                     <TableCell>Status</TableCell>
@@ -594,13 +669,30 @@ export function OrdersPanel({ refreshKey, onToast }: Props) {
                             }}
                           >
                             <Collapse in={expandedId === o.id} unmountOnExit>
-                              <Box sx={{ px: 2, py: 2, bgcolor: "grey.50" }}>
+                              <Box
+                                sx={{
+                                  px: 3,
+                                  py: 3,
+                                  bgcolor: "grey.50",
+                                  borderTop: "1px solid",
+                                  borderColor: "divider",
+                                }}
+                              >
                                 {o.source_document_name && (
                                   <Stack
                                     direction="row"
                                     spacing={1}
                                     alignItems="center"
-                                    sx={{ mb: 2 }}
+                                    sx={{
+                                      mb: 2.5,
+                                      px: 1.5,
+                                      py: 1,
+                                      bgcolor: "background.paper",
+                                      border: "1px solid",
+                                      borderColor: "divider",
+                                      borderRadius: 1,
+                                      width: "fit-content",
+                                    }}
                                   >
                                     <DescriptionIcon
                                       fontSize="small"
@@ -614,7 +706,7 @@ export function OrdersPanel({ refreshKey, onToast }: Props) {
                                     </Typography>
                                     <Typography
                                       variant="body2"
-                                      sx={{ fontWeight: 500 }}
+                                      sx={{ fontWeight: 600 }}
                                     >
                                       {o.source_document_name}
                                     </Typography>
@@ -633,6 +725,48 @@ export function OrdersPanel({ refreshKey, onToast }: Props) {
                                     order.
                                   </Typography>
                                 )}
+                                <Box sx={{ mt: 3 }}>
+                                  <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    justifyContent="space-between"
+                                    sx={{ mb: 1.25 }}
+                                  >
+                                    <Typography
+                                      variant="overline"
+                                      sx={{
+                                        color: "text.secondary",
+                                        fontWeight: 700,
+                                        letterSpacing: 0.6,
+                                      }}
+                                    >
+                                      Raw order JSON
+                                    </Typography>
+                                    <RawJsonCopyButton
+                                      data={o}
+                                      onToast={onToast}
+                                    />
+                                  </Stack>
+                                  <Box
+                                    component="pre"
+                                    sx={{
+                                      m: 0,
+                                      p: 2,
+                                      bgcolor: "grey.900",
+                                      color: "grey.100",
+                                      borderRadius: 1.5,
+                                      fontSize: 12,
+                                      lineHeight: 1.55,
+                                      fontFamily:
+                                        "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                      maxHeight: 360,
+                                      overflow: "auto",
+                                      whiteSpace: "pre",
+                                    }}
+                                  >
+                                    {JSON.stringify(o, null, 2)}
+                                  </Box>
+                                </Box>
                               </Box>
                             </Collapse>
                           </TableCell>

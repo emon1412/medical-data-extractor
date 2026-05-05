@@ -110,7 +110,7 @@ class ExtractionController:
                 patient_first_name=extracted.first_name,
                 patient_last_name=extracted.last_name,
                 patient_dob=extracted.date_of_birth,
-                status=OrderStatus.PENDING,
+                status=OrderStatus.COMPLETED,
                 source_document_name=file.filename,
                 extraction_confidence=extracted.confidence,
                 # Persist the rich extracted fields (prescriber, diagnoses,

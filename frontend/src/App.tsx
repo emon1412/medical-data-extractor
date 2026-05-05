@@ -2,7 +2,6 @@ import { useState } from "react"
 import {
   AppBar,
   Box,
-  Button,
   Container,
   Tab,
   Tabs,
@@ -11,11 +10,11 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material"
-import LogoutIcon from "@mui/icons-material/Logout"
-import CloudUploadIcon from "@mui/icons-material/CloudUpload"
-import AssignmentIcon from "@mui/icons-material/Assignment"
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt"
-import HistoryIcon from "@mui/icons-material/History"
+import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined"
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined"
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined"
+import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined"
+import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined"
 import { OrdersPanel } from "./components/OrdersPanel"
 import { UploadPanel } from "./components/UploadPanel"
 import { PatientsPanel } from "./components/PatientsPanel"
@@ -32,14 +31,26 @@ interface Toast {
 }
 
 const TABS: { id: Tab; label: string; icon: React.ReactElement }[] = [
-  { id: "upload", label: "Upload", icon: <CloudUploadIcon fontSize="small" /> },
-  { id: "orders", label: "Orders", icon: <AssignmentIcon fontSize="small" /> },
+  {
+    id: "upload",
+    label: "Upload",
+    icon: <CloudUploadOutlinedIcon fontSize="small" />,
+  },
+  {
+    id: "orders",
+    label: "Orders",
+    icon: <AssignmentOutlinedIcon fontSize="small" />,
+  },
   {
     id: "patients",
     label: "Patients",
-    icon: <PeopleAltIcon fontSize="small" />,
+    icon: <PeopleAltOutlinedIcon fontSize="small" />,
   },
-  { id: "activity", label: "Activity", icon: <HistoryIcon fontSize="small" /> },
+  {
+    id: "activity",
+    label: "Activity",
+    icon: <HistoryOutlinedIcon fontSize="small" />,
+  },
 ]
 
 export default function App() {
@@ -83,13 +94,19 @@ export default function App() {
                 variant="h6"
                 sx={{ fontWeight: 700, color: "text.primary" }}
               >
-                Medical Data Extractor
+                Medical Order Extractor
               </Typography>
             </Box>
             <Box sx={{ flex: 1 }} />
             <Tabs
               value={tab}
-              onChange={(_, v) => setTab(v as Tab)}
+              onChange={(_, v) => {
+                if (v === "signout") {
+                  signOut()
+                  return
+                }
+                setTab(v as Tab)
+              }}
               textColor="inherit"
             >
               {TABS.map((t) => (
@@ -109,16 +126,18 @@ export default function App() {
                   }}
                 />
               ))}
+              <Tab
+                key="signout"
+                value="signout"
+                label="Sign out"
+                icon={<LogoutOutlinedIcon fontSize="small" />}
+                iconPosition="start"
+                sx={{
+                  color: "text.secondary",
+                  minHeight: 40,
+                }}
+              />
             </Tabs>
-            <Button
-              size="small"
-              color="inherit"
-              startIcon={<LogoutIcon fontSize="small" />}
-              onClick={signOut}
-              sx={{ color: "text.secondary" }}
-            >
-              Sign out
-            </Button>
           </Toolbar>
         </Container>
       </AppBar>

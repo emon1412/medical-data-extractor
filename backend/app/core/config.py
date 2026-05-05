@@ -15,12 +15,12 @@ class Settings(BaseSettings):
     )
 
     # App
-    app_name: str = "Medical Data Extractor API"
+    app_name: str = "Medical Order Extractor API"
     app_version: str = "1.0.0"
     environment: str = Field(default="development")
     debug: bool = Field(default=False)
 
-    # Database — Postgres only.
+    # Database — Postgres.
     # Local dev: spin up via `docker compose up -d postgres` (see docker-compose.yml).
     # Production: Cloud SQL via Unix socket — see backend/.env.example.
     database_url: str = Field(

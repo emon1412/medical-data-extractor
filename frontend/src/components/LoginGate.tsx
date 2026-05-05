@@ -78,7 +78,7 @@ export function LoginGate({ onAuthenticated }: Props) {
                 <LockOutlinedIcon />
               </Box>
               <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                Medical Data Extractor
+                Medical Order Extractor
               </Typography>
               <Typography variant="body2" color="text.secondary" align="center">
                 Enter your access key to continue.

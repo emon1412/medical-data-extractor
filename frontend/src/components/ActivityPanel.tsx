@@ -66,7 +66,7 @@ export function ActivityPanel({ refreshKey }: Props) {
           Activity
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Audit trail of every request handled by the service.
+          Audit trail of every actions performed.
         </Typography>
       </Box>
 
@@ -85,7 +85,7 @@ export function ActivityPanel({ refreshKey }: Props) {
                 value={pathFilter}
                 onChange={(e) => setPathFilter(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && load()}
-                sx={{ width: 260 }}
+                sx={{ width: 520 }}
               />
               <Button variant="outlined" onClick={load} disabled={loading}>
                 {loading ? "Loading…" : "Refresh"}

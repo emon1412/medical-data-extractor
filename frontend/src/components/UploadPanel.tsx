@@ -12,9 +12,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material"
-import CheckCircleIcon from "@mui/icons-material/CheckCircle"
-import CloudUploadIcon from "@mui/icons-material/CloudUpload"
-import DescriptionIcon from "@mui/icons-material/Description"
+import CheckCircleIcon from "@mui/icons-material/CheckCircleOutlined"
+import CloudUploadIcon from "@mui/icons-material/CloudUploadOutlined"
+import DescriptionIcon from "@mui/icons-material/DescriptionOutlined"
 import { api } from "../lib/api"
 import type { ExtractionResponse } from "../types/api"
 import { DocumentDetailsView } from "./DocumentDetailsView"
@@ -113,8 +113,7 @@ export function UploadPanel({ onOrderCreated, onToast, onViewOrders }: Props) {
           Extract patient data from a PDF
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mt: 1.5 }}>
-          Drop a medical order and we&apos;ll pull out the patient, prescriber,
-          diagnoses, and items.
+          Drop a medical order and the relevant data will be extracted
         </Typography>
       </Box>
 
@@ -196,7 +195,7 @@ export function UploadPanel({ onOrderCreated, onToast, onViewOrders }: Props) {
                   Drop a PDF here, or click to browse
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Up to 10 MB. Scanned and digital PDFs both supported.
+                  Up to 10 MB max size
                 </Typography>
               </Stack>
             )}
@@ -226,7 +225,7 @@ export function UploadPanel({ onOrderCreated, onToast, onViewOrders }: Props) {
                 ) : undefined
               }
             >
-              {uploading ? "Extracting…" : "Extract patient data"}
+              {uploading ? "Extracting…" : "Extract data"}
             </Button>
             {file && (
               <Button variant="outlined" disabled={uploading} onClick={reset}>
