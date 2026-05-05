@@ -8,8 +8,8 @@ from app.core.config import get_settings
 from app.models.order import OrderStatus
 from app.schemas.extraction import ExtractionResponse
 from app.schemas.order import OrderCreate
-from app.repositories.order_repository import OrderRepository
-from app.repositories.patient_repository import PatientRepository
+from app.data_services.order_data_service import OrderDataService
+from app.data_services.patient_data_service import PatientDataService
 from app.services.extraction import extract_patient_info
 from app.services.extraction_cache import extraction_cache, hash_bytes
 from app.services.pdf_text import extract_text_from_pdf
@@ -101,7 +101,7 @@ class ExtractionController:
                     ),
                 )
 
-            patient = PatientRepository(db).find_or_create(
+            patient = PatientDataService(db).find_or_create(
                 first_name=extracted.first_name,
                 last_name=extracted.last_name,
                 dob=extracted.date_of_birth,
@@ -122,7 +122,7 @@ class ExtractionController:
                     else None
                 ),
             )
-            order = OrderRepository(db).create(order_payload, patient_id=patient.id)
+            order = OrderDataService(db).create(order_payload, patient_id=patient.id)
             order_id = order.id
 
         return ExtractionResponse(

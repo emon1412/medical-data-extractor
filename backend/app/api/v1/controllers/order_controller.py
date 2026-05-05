@@ -7,16 +7,16 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models.order import OrderStatus
-from app.repositories.order_repository import (
-    OrderRepository,
-    OrderRepositoryProtocol,
+from app.data_services.order_data_service import (
+    OrderDataService,
+    OrderDataServiceProtocol,
 )
-from app.repositories.patient_repository import PatientRepository
+from app.data_services.patient_data_service import PatientDataService
 from app.schemas.order import OrderCreate, OrderListResponse, OrderRead, OrderUpdate
 
 
-def _repo(db: Session) -> OrderRepositoryProtocol:
-    return OrderRepository(db)
+def _repo(db: Session) -> OrderDataServiceProtocol:
+    return OrderDataService(db)
 
 
 class OrderController:
@@ -25,7 +25,7 @@ class OrderController:
         # Find-or-create the canonical Patient. Same first+last+dob always
         # resolves to the same patient row; orders for that person all link
         # back to it via patient_id.
-        patient = PatientRepository(db).find_or_create(
+        patient = PatientDataService(db).find_or_create(
             first_name=payload.patient_first_name,
             last_name=payload.patient_last_name,
             dob=payload.patient_dob,

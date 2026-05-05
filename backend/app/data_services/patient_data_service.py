@@ -1,7 +1,4 @@
 """Persistence for the Patient aggregate."""
-# Same reason as order_repository.py: defer annotation evaluation so the
-# `list(...)` method doesn't shadow the built-in and break later
-# `list[...]` annotations on Python 3.12.
 from __future__ import annotations
 
 from datetime import date
@@ -13,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.patient import Patient
 
 
-class PatientRepositoryProtocol(Protocol):
+class PatientDataServiceProtocol(Protocol):
     def get(self, patient_id: str) -> Optional[Patient]: ...
 
     def find_by_identity(
@@ -33,7 +30,7 @@ class PatientRepositoryProtocol(Protocol):
     ) -> Tuple[list[Patient], int]: ...
 
 
-class PatientRepository:
+class PatientDataService:
     def __init__(self, db: Session) -> None:
         self.db = db
 

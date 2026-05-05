@@ -44,13 +44,7 @@ class Settings(BaseSettings):
 
     # LLM
     openai_api_key: str = Field(default="")
-    # gpt-5.4 (released 2026-03-05): frontier multimodal model, accepts images up to
-    # 10M pixels uncompressed, structured outputs, ideal for medical PDF OCR.
-    # For lower-cost / faster extractions you can switch to "gpt-5.4-mini".
     openai_model: str = Field(default="gpt-5.4")
-    # Reasoning effort for the extraction call. Patient-info extraction is essentially
-    # OCR + light structuring, so "low" gives the best speed/cost without hurting
-    # accuracy. Bump to "medium" for very noisy / handwritten scans.
     openai_reasoning_effort: str = Field(default="low")
     llm_timeout_seconds: int = Field(default=45)
     llm_max_retries: int = Field(default=2)

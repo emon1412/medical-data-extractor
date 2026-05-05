@@ -1,9 +1,4 @@
 """Persistence for the Order aggregate."""
-# Defer all annotation evaluation: our `list(...)` method shadows the
-# built-in, so eager evaluation (Python 3.12 default in production) breaks
-# any later `list[...]` type annotation in this class with a confusing
-# "'function' object is not subscriptable" error. Local Python 3.14
-# defers annotations by default and hides the bug.
 from __future__ import annotations
 
 from typing import Optional, Protocol, Tuple
@@ -15,7 +10,7 @@ from app.models.order import Order, OrderStatus
 from app.schemas.order import OrderCreate, OrderUpdate
 
 
-class OrderRepositoryProtocol(Protocol):
+class OrderDataServiceProtocol(Protocol):
     """Public contract for any Order persistence backend.
 
     Depend on this in controllers / services so the concrete backend can be
@@ -40,8 +35,8 @@ class OrderRepositoryProtocol(Protocol):
     def delete(self, order: Order) -> None: ...
 
 
-class OrderRepository:
-    """SQLAlchemy implementation of :class:`OrderRepositoryProtocol`."""
+class OrderDataService:
+    """SQLAlchemy implementation of :class:`OrderDataServiceProtocol`."""
 
     def __init__(self, db: Session) -> None:
         self.db = db

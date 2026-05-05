@@ -5,13 +5,13 @@ from typing import Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.repositories.order_repository import OrderRepository
-from app.repositories.patient_repository import PatientRepository
+from app.data_services.order_data_service import OrderDataService
+from app.data_services.patient_data_service import PatientDataService
 from app.schemas.order import OrderListResponse, OrderRead
 from app.schemas.patient import PatientListResponse, PatientRead
 
 
-def _to_read(repo: PatientRepository, p) -> PatientRead:
+def _to_read(repo: PatientDataService, p) -> PatientRead:
     data = PatientRead.model_validate(p)
     data.order_count = repo.order_count(p.id)
     return data
@@ -22,7 +22,7 @@ class PatientController:
     def list(
         db: Session, *, limit: int, offset: int, search: Optional[str]
     ) -> PatientListResponse:
-        repo = PatientRepository(db)
+        repo = PatientDataService(db)
         items, total = repo.list(limit=limit, offset=offset, search=search)
         return PatientListResponse(
             items=[_to_read(repo, p) for p in items],
@@ -33,7 +33,7 @@ class PatientController:
 
     @staticmethod
     def get(db: Session, patient_id: str) -> PatientRead:
-        repo = PatientRepository(db)
+        repo = PatientDataService(db)
         p = repo.get(patient_id)
         if p is None:
             raise HTTPException(
@@ -46,12 +46,12 @@ class PatientController:
     def list_orders(
         db: Session, patient_id: str, *, limit: int, offset: int
     ) -> OrderListResponse:
-        if PatientRepository(db).get(patient_id) is None:
+        if PatientDataService(db).get(patient_id) is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Patient {patient_id} not found",
             )
-        order_repo = OrderRepository(db)
+        order_repo = OrderDataService(db)
         items, total = order_repo.list_for_patient(
             patient_id, limit=limit, offset=offset
         )

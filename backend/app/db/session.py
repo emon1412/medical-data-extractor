@@ -59,7 +59,7 @@ class Base(DeclarativeBase):
 
 # --- Lazy schema initialisation ---------------------------------------------
 # Cloud Run fires FastAPI lifespan events normally, so `init_db` runs from the
-# `_lifespan` hook in app.main. We *also* keep a lazy first-request initialiser
+# `_lifespan` hook in app.main. We also keep a lazy first-request initialiser
 # (`ensure_schema`) as a safety net for environments where lifespan is skipped
 # (e.g. some test harnesses). It is idempotent and tolerant of failure (we log
 # and let the actual query produce the real error).

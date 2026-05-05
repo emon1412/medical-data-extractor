@@ -15,7 +15,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from app.db.session import SessionLocal, ensure_schema
-from app.repositories.activity_log_repository import ActivityLogRepository
+from app.data_services.activity_log_data_service import ActivityLogDataService
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ class ActivityLoggerMiddleware(BaseHTTPMiddleware):
                     ensure_schema()
                     db = SessionLocal()
                     try:
-                        ActivityLogRepository(db).create(
+                        ActivityLogDataService(db).create(
                             method=request.method,
                             path=path,
                             status_code=status_code,

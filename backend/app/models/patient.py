@@ -19,8 +19,6 @@ def _utcnow() -> datetime:
 class Patient(Base):
     __tablename__ = "patients"
     __table_args__ = (
-        # Heuristic identity: same first name + last name + DOB = same person.
-        # Real systems would use MRN; this is the right MVP proxy.
         UniqueConstraint(
             "first_name_lower",
             "last_name_lower",
@@ -36,9 +34,6 @@ class Patient(Base):
     last_name: Mapped[str] = mapped_column(String(120), nullable=False)
     dob: Mapped[date | None] = mapped_column(Date, nullable=True)
 
-    # Lowercased copies used for case-insensitive uniqueness + lookup.
-    # (Avoids relying on a functional `lower()` index — keeps the schema
-    # explicit and inspectable.)
     first_name_lower: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
     last_name_lower: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
 

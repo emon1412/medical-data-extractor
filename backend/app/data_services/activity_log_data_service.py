@@ -1,7 +1,4 @@
 """Persistence for the ActivityLog audit trail."""
-# Same reason as order_repository.py: defer annotation evaluation so the
-# `list(...)` method doesn't shadow the built-in and break later
-# `list[...]` annotations on Python 3.12.
 from __future__ import annotations
 
 from typing import Optional, Protocol, Tuple
@@ -12,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.activity_log import ActivityLog
 
 
-class ActivityLogRepositoryProtocol(Protocol):
+class ActivityLogDataServiceProtocol(Protocol):
     def create(
         self,
         *,
@@ -42,8 +39,8 @@ class ActivityLogRepositoryProtocol(Protocol):
     ) -> Tuple[list[ActivityLog], int]: ...
 
 
-class ActivityLogRepository:
-    """SQLAlchemy implementation of :class:`ActivityLogRepositoryProtocol`."""
+class ActivityLogDataService:
+    """SQLAlchemy implementation of :class:`ActivityLogDataServiceProtocol`."""
 
     def __init__(self, db: Session) -> None:
         self.db = db

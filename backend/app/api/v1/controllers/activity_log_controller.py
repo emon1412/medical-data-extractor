@@ -3,7 +3,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.repositories.activity_log_repository import ActivityLogRepository
+from app.data_services.activity_log_data_service import ActivityLogDataService
 from app.schemas.activity_log import ActivityLogListResponse, ActivityLogRead
 
 
@@ -19,7 +19,7 @@ class ActivityLogController:
         resource_type: Optional[str] = None,
         resource_id: Optional[str] = None,
     ) -> ActivityLogListResponse:
-        items, total = ActivityLogRepository(db).list(
+        items, total = ActivityLogDataService(db).list(
             limit=limit,
             offset=offset,
             path_contains=path_contains,
