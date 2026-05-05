@@ -10,8 +10,8 @@ import type {
   PatientListResponse,
 } from "../types/api"
 
-const STORAGE_KEY_API = "hde.apiBaseUrl"
-const STORAGE_KEY_KEY = "hde.apiKey"
+const STORAGE_KEY_API = "mde.apiBaseUrl"
+const STORAGE_KEY_KEY = "mde.apiKey"
 
 // Build-time defaults from Vite env vars (`frontend/.env.local` for local dev,
 // or `--build-arg VITE_API_BASE_URL=... VITE_API_KEY=...` baked into the

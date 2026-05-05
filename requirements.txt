@@ -1,7 +1,7 @@
 # Production runtime requirements -- this is the slim list used by the
 # Cloud Run container build (see Dockerfile at the repo root).
 #
-# For local-dev-only tools (uvicorn[standard], pdfplumber, pytest, etc.) see
+# For local-dev-only tools (uvicorn[standard], pdfplumber, etc.) see
 # backend/requirements.txt. Those MUST NOT land in the production bundle.
 fastapi==0.115.5
 pydantic==2.13.1

@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     # Local dev: spin up via `docker compose up -d postgres` (see docker-compose.yml).
     # Production: Cloud SQL via Unix socket — see backend/.env.example.
     database_url: str = Field(
-        default="postgresql+psycopg://hde:hde@localhost:5434/medical_data"
+        default="postgresql+psycopg://mde:mde@localhost:5434/medical_data"
     )
 
     # Security

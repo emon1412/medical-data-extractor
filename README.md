@@ -27,10 +27,9 @@ medical-data-extractor/
 │   │   ├── db/                    Engine + Session
 │   │   ├── middleware/            request_id, error envelope, rate-limit, CORS, audit
 │   │   ├── models/                SQLAlchemy ORM (Order, Patient, ActivityLog)
-│   │   ├── repositories/          DB access layer
+│   │   ├── data_services/         DB access layer
 │   │   ├── schemas/               Pydantic request/response models
 │   │   └── services/              PDF text extraction, OpenAI extraction, caching
-│   ├── tests/                     pytest suite
 │   └── alembic.ini                migrations config
 ├── frontend/                      React SPA (Vite)
 │   ├── src/
@@ -134,7 +133,7 @@ Requirements: Python ≥ 3.11, Node ≥ 20, Docker.
 ```bash
 docker compose up -d postgres
 # Postgres is exposed on localhost:5434
-# DB:  medical_data    user/pass: hde / hde
+# DB:  medical_data    user/pass: mde / mde
 ```
 
 Optionally start the Adminer UI at <http://localhost:8081>:
@@ -151,15 +150,15 @@ cp .env.example .env             # edit values (see below)
 python -m venv .venv
 source .venv/bin/activate
 pip install -r ../requirements.txt
-pip install "uvicorn[standard]" pdfplumber pytest   # local-dev extras
+pip install "uvicorn[standard]" pdfplumber   # local-dev extras
 
 # Apply DB schema (Alembic)
 alembic upgrade head
 
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8080
 ```
 
-API is now at <http://localhost:8000/api/v1>, docs at <http://localhost:8000/docs>.
+API is now at <http://localhost:8080/api/v1>, docs at <http://localhost:8080/docs>.
 
 ### 3. Start the frontend
 
@@ -169,15 +168,8 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-Vite proxies `/api/*` to `http://localhost:8000` (see `vite.config.ts`), so the SPA
+Vite proxies `/api/*` to `http://localhost:8080` (see `vite.config.ts`), so the SPA
 calls the backend with same-origin relative URLs.
-
-### Run the tests
-
-```bash
-cd backend
-pytest
-```
 
 ---
 
@@ -192,7 +184,7 @@ The frontend reads `VITE_*` vars from `frontend/.env.local` at build time.
 | --------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------- |
 | `ENVIRONMENT`               | `development`                                              | `development` \| `production`                                  |
 | `DEBUG`                     | `true`                                                     | Enables `/docs` and verbose logs                               |
-| `DATABASE_URL`              | `postgresql+psycopg://hde:hde@localhost:5434/medical_data` | SQLAlchemy URL. In prod use the Cloud SQL socket form.         |
+| `DATABASE_URL`              | `postgresql+psycopg://mde:mde@localhost:5434/medical_data` | SQLAlchemy URL. In prod use the Cloud SQL socket form.         |
 | `REQUIRE_AUTH`              | `true`                                                     | When true, all `/api/v1/*` (except `/health`) need `X-API-Key` |
 | `API_KEY`                   | _random 32-byte hex_                                       | The accepted API key. Generate with `openssl rand -hex 32`.    |
 | `CORS_ORIGINS`              | `http://localhost:5173,http://127.0.0.1:5173`              | Comma-separated, or `*`                                        |
@@ -224,7 +216,7 @@ Target architecture:
 
 - **Backend** → Cloud Run service `mde-backend` (containerised FastAPI on `:8080`)
 - **Frontend** → Cloud Run service `mde-frontend` (nginx serving the Vite build, proxying `/api/*` to the backend with `X-API-Key` injected from Secret Manager)
-- **Database** → Cloud SQL for Postgres instance `hde-pg`, database `medical_data`
+- **Database** → Cloud SQL for Postgres instance `mde-pg`, database `medical_data`
 - **Secrets** → Secret Manager (`API_KEY`, `OPENAI_API_KEY`, `DB_PASSWORD`)
 
 Set common variables once:
@@ -232,7 +224,7 @@ Set common variables once:
 ```bash
 export PROJECT_ID=monsteria-core-staging
 export REGION=us-central1
-export SQL_INSTANCE=hde-pg
+export SQL_INSTANCE=mde-pg
 gcloud config set project "$PROJECT_ID"
 ```
 
@@ -257,14 +249,14 @@ gcloud sql instances create "$SQL_INSTANCE" \
   --storage-size=10GB
 
 gcloud sql databases create medical_data --instance="$SQL_INSTANCE"
-gcloud sql users create hde --instance="$SQL_INSTANCE" --password='<choose-one>'
+gcloud sql users create mde --instance="$SQL_INSTANCE" --password='<choose-one>'
 ```
 
 Apply the schema (one-off, from your laptop using the Cloud SQL Auth Proxy):
 
 ```bash
 cloud-sql-proxy "$PROJECT_ID:$REGION:$SQL_INSTANCE" &
-DATABASE_URL='postgresql+psycopg://hde:<pass>@localhost:5432/medical_data' \
+DATABASE_URL='postgresql+psycopg://mde:<pass>@localhost:5432/medical_data' \
   alembic -c backend/alembic.ini upgrade head
 ```
 
@@ -286,7 +278,7 @@ gcloud run deploy mde-backend \
   --port 8080 \
   --add-cloudsql-instances "$PROJECT_ID:$REGION:$SQL_INSTANCE" \
   --set-env-vars "ENVIRONMENT=production,DEBUG=false,REQUIRE_AUTH=true,CORS_ORIGINS=*,OPENAI_MODEL=gpt-5.4,OPENAI_REASONING_EFFORT=low" \
-  --set-env-vars "DATABASE_URL=postgresql+psycopg://hde:PASSWORD_PLACEHOLDER@/medical_data?host=/cloudsql/$PROJECT_ID:$REGION:$SQL_INSTANCE" \
+  --set-env-vars "DATABASE_URL=postgresql+psycopg://mde:PASSWORD_PLACEHOLDER@/medical_data?host=/cloudsql/$PROJECT_ID:$REGION:$SQL_INSTANCE" \
   --set-secrets "API_KEY=API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest"
 ```
 
@@ -372,36 +364,38 @@ The frontend renders the response via `DocumentDetailsView` and offers a
 
 A few concrete improvements queued up for when this graduates from a prototype:
 
-- **Production database migrations.** Today the schema is applied with a
-  one-shot `alembic upgrade head` from a developer laptop using the Cloud SQL
-  Auth Proxy. The next step is to make migrations a first-class deploy step:
-  bake `alembic upgrade head` into a Cloud Run Job (or a pre-deploy Cloud Build
-  step) that runs against the target database before the new backend revision
-  receives traffic, with automatic rollback if the migration fails. Migrations
-  themselves should follow expand-and-contract (additive change → backfill →
-  drop) so the old and new app versions can coexist during the rollout.
+- **Production database migrations.** Today `alembic upgrade head` is run from
+  a laptop via the Cloud SQL Auth Proxy. Next step: bake it into a Cloud Run
+  Job that runs as a pre-deploy step against the target DB, with rollback on
+  failure. Migrations should follow expand-and-contract so old and new app
+  versions can coexist during the rollout.
 
-- **Lossless PDF → text → LLM extraction.** Currently the PDF is sent to the
-  LLM as an image, which gives good results on scanned faxes but burns tokens,
-  is slow, and is hard to evaluate offline. A better pipeline is to first
-  perform a lossless conversion of the PDF (text layer + per-page OCR for
-  scanned pages, with bounding boxes preserved) and feed that structured text
-  to the model. That gives us deterministic input to test against, much lower
-  per-call cost, the ability to swap models freely, and richer error
-  attribution (we know which page / region a field came from).
+- **Lossless PDF → text → LLM extraction.** The PDF is currently sent to the
+  model as an image — accurate on scanned faxes, but slow and token-heavy.
+  Switching to a lossless PDF-to-text conversion (with per-page OCR for
+  scanned pages) and feeding that to the LLM gives deterministic, cheaper,
+  testable input and lets us attribute fields back to a specific page/region.
 
-- **Proper authentication.** The current `X-API-Key` is a single shared secret
-  injected by nginx — fine for a demo, not for real users. The plan is an
-  OAuth2 / OIDC login (Google + email/password via something like Auth0,
-  Clerk, or a self-hosted Keycloak), per-user sessions, role-based access on
-  orders/patients, and signed audit entries that attribute every action to a
-  real principal instead of "the API key".
+- **Asynchronous extraction pipeline.** Extraction is synchronous today, so
+  the HTTP request blocks for the full LLM round-trip (often 10–30s). Next
+  step: accept the upload, enqueue a job (Cloud Tasks / Pub/Sub), return an
+  `extraction_id` immediately, and stream progress to the client over SSE or
+  polling. This unblocks the UI, removes the request-timeout ceiling, and
+  lets us batch / retry failed extractions.
 
-- **CI/CD instead of `gcloud run deploy --source .`** Deploying from a laptop
-  is fast but doesn't scale and provides no safety net. The next iteration is
-  a GitHub Actions pipeline that on every push to `main`: runs the backend
-  pytest suite + frontend type-check, builds both images via Cloud Build,
-  pushes them to Artifact Registry, runs Alembic migrations as a Cloud Run
-  Job, deploys the backend with `--no-traffic`, smoke-tests the new revision,
-  then shifts traffic 0 → 10 → 100% with automatic rollback on error-rate
-  regression. PR builds would deploy to a preview environment.
+- **Proper authentication.** The shared `X-API-Key` is fine for a demo, not
+  for real users. Replace with OAuth2 / OIDC login (Google + email/password),
+  per-user sessions, role-based access on orders/patients, and audit entries
+  attributed to a real principal.
+
+- **CI/CD instead of `gcloud run deploy --source .`** Move deploys into a
+  GitHub Actions pipeline: run tests, build images via Cloud Build, run
+  migrations as a Cloud Run Job, deploy with `--no-traffic`, smoke-test, then
+  shift traffic gradually with automatic rollback on regression. PR builds
+  get preview environments.
+
+- **Unit and integration tests.** Bring back a proper test suite: pytest unit
+  tests for data services, schemas, and extraction helpers, plus integration
+  tests that hit the FastAPI app with a real Postgres (Testcontainers or the
+  CI Postgres service) and a mocked OpenAI client. Wire it into CI as a
+  required check before deploys.

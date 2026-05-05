@@ -1,28 +1,28 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: hde-postgres
+    container_name: mde-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: hde
-      POSTGRES_PASSWORD: hde
+      POSTGRES_USER: mde
+      POSTGRES_PASSWORD: mde
       POSTGRES_DB: medical_data
     ports:
       - "5434:5432"
     volumes:
-      - hde_pgdata:/var/lib/postgresql/data
+      - mde_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hde -d medical_data"]
+      test: ["CMD-SHELL", "pg_isready -U mde -d medical_data"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   # Optional: a lightweight web UI for poking at the DB.
   # Browse to http://localhost:8081 and connect with system=postgres, server=postgres,
-  # user=hde, password=hde, database=medical_data.
+  # user=mde, password=mde, database=medical_data.
   adminer:
     image: adminer:latest
-    container_name: hde-adminer
+    container_name: mde-adminer
     restart: unless-stopped
     depends_on:
       postgres:
@@ -32,4 +32,4 @@ services:
     profiles: ["ui"]
 
 volumes:
-  hde_pgdata:
+  mde_pgdata:
